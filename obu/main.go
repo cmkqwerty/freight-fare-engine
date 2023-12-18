@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/cmkqwerty/freight-fare-engine/types"
 	"github.com/gorilla/websocket"
 	"log"
 	"math"
@@ -11,12 +12,6 @@ import (
 const wsEndpoint = "ws://localhost:30000/ws"
 
 var sendInterval = time.Second
-
-type OBUData struct {
-	OBUID     int     `json:"obuID"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
-}
 
 func generateCord() float64 {
 	n := float64(rand.Intn(100) + 1)
@@ -48,7 +43,7 @@ func main() {
 	for {
 		for i := 0; i < len(obuIDs); i++ {
 			lat, long := generateLatLong()
-			data := OBUData{
+			data := types.OBUData{
 				OBUID:     obuIDs[i],
 				Latitude:  lat,
 				Longitude: long,
