@@ -2,18 +2,21 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/cmkqwerty/freight-fare-engine/aggregator/client"
 	"github.com/cmkqwerty/freight-fare-engine/types"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"github.com/sirupsen/logrus"
+	"time"
 )
 
 type KafkaConsumer struct {
-	consumer    *kafka.Consumer
-	isRunning   bool
-	calcService CalculatorServicer
+	consumer         *kafka.Consumer
+	isRunning        bool
+	calcService      CalculatorServicer
+	aggregatorClient *client.Client
 }
 
-func NewKafkaConsumer(topic string, svc CalculatorServicer) (*KafkaConsumer, error) {
+func NewKafkaConsumer(topic string, svc CalculatorServicer, aggregatorClient *client.Client) (*KafkaConsumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "localhost",
 		"group.id":          "myGroup",
@@ -26,8 +29,9 @@ func NewKafkaConsumer(topic string, svc CalculatorServicer) (*KafkaConsumer, err
 	c.SubscribeTopics([]string{topic}, nil)
 
 	return &KafkaConsumer{
-		consumer:    c,
-		calcService: svc,
+		consumer:         c,
+		calcService:      svc,
+		aggregatorClient: aggregatorClient,
 	}, nil
 }
 
@@ -56,6 +60,15 @@ func (c *KafkaConsumer) readMessageLoop() {
 			logrus.Errorf("Error calculating distance: %v", err)
 			continue
 		}
-		_ = distance
+
+		req := types.Distance{
+			OBUID: data.OBUID,
+			Value: distance,
+			Unix:  time.Now().UnixNano(),
+		}
+		if err := c.aggregatorClient.AggregateInvoice(req); err != nil {
+			logrus.Errorf("Error aggregating invoice: %v", err)
+			continue
+		}
 	}
 }
