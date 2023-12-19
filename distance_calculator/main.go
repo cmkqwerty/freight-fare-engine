@@ -10,9 +10,8 @@ func main() {
 		err error
 	)
 	svc = NewCalculatorService()
-	if err != nil {
-		log.Fatal(err)
-	}
+	svc = NewLogMiddleware(svc)
+
 	kafkaConsumer, err := NewKafkaConsumer(kafkaTopic, svc)
 	if err != nil {
 		log.Fatal(err)
