@@ -1,6 +1,9 @@
 package main
 
-import "github.com/cmkqwerty/freight-fare-engine/types"
+import (
+	"context"
+	"github.com/cmkqwerty/freight-fare-engine/types"
+)
 
 type GRPCAggregatorServer struct {
 	types.UnimplementedAggregatorServer
@@ -13,12 +16,12 @@ func NewAggregatorGRPCServer(svc Aggregator) *GRPCAggregatorServer {
 	}
 }
 
-func (g *GRPCAggregatorServer) AggregateDistance(request *types.AggregateRequest) error {
+func (g *GRPCAggregatorServer) Aggregate(ctx context.Context, request *types.AggregateRequest) (*types.None, error) {
 	distance := types.Distance{
 		OBUID: int(request.ObuID),
 		Value: request.Value,
 		Unix:  request.Unix,
 	}
 
-	return g.svc.AggregateDistance(distance)
+	return &types.None{}, g.svc.AggregateDistance(distance)
 }
