@@ -5,12 +5,15 @@ import (
 	"flag"
 	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"google.golang.org/grpc"
+	"net"
 	"net/http"
 	"strconv"
 )
 
 func main() {
-	listenAddr := flag.String("listenAddr", ":3000", "HTTP server listen address")
+	httpListenAddr := flag.String("httpAddr", ":3000", "HTTP server listen address")
+	grpcListenAddr := flag.String("grpcAddr", ":3001", "GRPC server listen address")
 	flag.Parse()
 
 	var (
@@ -19,7 +22,24 @@ func main() {
 	)
 	svc = NewLogMiddleware(svc)
 
-	makeHTTPTransport(*listenAddr, svc)
+	go makeGRPCTransport(*grpcListenAddr, svc)
+	makeHTTPTransport(*httpListenAddr, svc)
+}
+
+func makeGRPCTransport(listenAddr string, svc Aggregator) error {
+	fmt.Println("HTTP Transport running on", listenAddr)
+
+	ln, err := net.Listen("TCP", listenAddr)
+	if err != nil {
+		return err
+	}
+	defer ln.Close()
+
+	server := grpc.NewServer([]grpc.ServerOption{}...)
+
+	types.RegisterAggregatorServer(server, NewAggregatorGRPCServer(svc))
+
+	return server.Serve(ln)
 }
 
 func makeHTTPTransport(listenAddr string, svc Aggregator) {
