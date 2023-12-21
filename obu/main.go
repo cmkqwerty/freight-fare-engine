@@ -4,14 +4,13 @@ import (
 	"github.com/cmkqwerty/freight-fare-engine/types"
 	"github.com/gorilla/websocket"
 	"log"
-	"math"
 	"math/rand"
 	"time"
 )
 
 const wsEndpoint = "ws://localhost:30000/ws"
 
-var sendInterval = time.Second
+var sendInterval = time.Second * 5
 
 func generateCord() float64 {
 	n := float64(rand.Intn(100) + 1)
@@ -27,7 +26,7 @@ func generateLatLong() (float64, float64) {
 func generateOBUIDS(n int) []int {
 	ids := make([]int, n)
 	for i := 0; i < n; i++ {
-		ids[i] = rand.Intn(math.MaxInt)
+		ids[i] = rand.Intn(999999999)
 	}
 
 	return ids
