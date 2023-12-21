@@ -1,8 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"github.com/sirupsen/logrus"
 )
 
 const basePrice = 3.15
@@ -28,7 +28,11 @@ func NewInvoiceAggregator(store Storer) Aggregator {
 }
 
 func (i *InvoiceAggregator) AggregateDistance(distance types.Distance) error {
-	fmt.Println("processing and inserting distance:", distance)
+	logrus.WithFields(logrus.Fields{
+		"obuID":    distance.OBUID,
+		"distance": distance.Value,
+		"unix":     distance.Unix,
+	}).Info("aggregator: inserting distance")
 
 	return i.store.Insert(distance)
 }

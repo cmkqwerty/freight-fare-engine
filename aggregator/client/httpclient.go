@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
@@ -52,7 +53,9 @@ func (c *HTTPClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, er
 		return nil, err
 	}
 
-	req, err := http.NewRequest(http.MethodPost, c.Endpoint+"/invoice", bytes.NewReader(b))
+	endpoint := fmt.Sprintf("%s/%s?obu=%d", c.Endpoint, "invoice", id)
+	logrus.Infof("endpoint: %s", endpoint)
+	req, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}

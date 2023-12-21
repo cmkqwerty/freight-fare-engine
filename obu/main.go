@@ -4,7 +4,6 @@ import (
 	"github.com/cmkqwerty/freight-fare-engine/types"
 	"github.com/gorilla/websocket"
 	"log"
-	"math"
 	"math/rand"
 	"time"
 )
@@ -27,7 +26,7 @@ func generateLatLong() (float64, float64) {
 func generateOBUIDS(n int) []int {
 	ids := make([]int, n)
 	for i := 0; i < n; i++ {
-		ids[i] = rand.Intn(math.MaxInt)
+		ids[i] = rand.Intn(999999999)
 	}
 
 	return ids
