@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/cmkqwerty/freight-fare-engine/aggregator/client"
 	"github.com/cmkqwerty/freight-fare-engine/types"
@@ -13,10 +14,10 @@ type KafkaConsumer struct {
 	consumer         *kafka.Consumer
 	isRunning        bool
 	calcService      CalculatorServicer
-	aggregatorClient *client.HTTPClient
+	aggregatorClient client.Client
 }
 
-func NewKafkaConsumer(topic string, svc CalculatorServicer, aggregatorClient *client.HTTPClient) (*KafkaConsumer, error) {
+func NewKafkaConsumer(topic string, svc CalculatorServicer, aggregatorClient client.Client) (*KafkaConsumer, error) {
 	c, err := kafka.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": "localhost",
 		"group.id":          "myGroup",
@@ -61,12 +62,12 @@ func (c *KafkaConsumer) readMessageLoop() {
 			continue
 		}
 
-		req := types.Distance{
-			OBUID: data.OBUID,
+		req := &types.AggregateRequest{
+			ObuID: int32(data.OBUID),
 			Value: distance,
 			Unix:  time.Now().UnixNano(),
 		}
-		if err := c.aggregatorClient.AggregateInvoice(req); err != nil {
+		if err := c.aggregatorClient.Aggregate(context.Background(), req); err != nil {
 			logrus.Errorf("Error aggregating invoice: %v", err)
 			continue
 		}

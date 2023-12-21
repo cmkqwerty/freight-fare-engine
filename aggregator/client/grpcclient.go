@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"github.com/cmkqwerty/freight-fare-engine/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -8,7 +9,7 @@ import (
 
 type GRPCClient struct {
 	Endpoint string
-	types.AggregatorClient
+	client   types.AggregatorClient
 }
 
 func NewGRPCClient(endpoint string) (*GRPCClient, error) {
@@ -20,7 +21,12 @@ func NewGRPCClient(endpoint string) (*GRPCClient, error) {
 	c := types.NewAggregatorClient(conn)
 
 	return &GRPCClient{
-		Endpoint:         endpoint,
-		AggregatorClient: c,
+		Endpoint: endpoint,
+		client:   c,
 	}, nil
+}
+
+func (c *GRPCClient) Aggregate(ctx context.Context, request *types.AggregateRequest) error {
+	_, err := c.client.Aggregate(ctx, request)
+	return err
 }

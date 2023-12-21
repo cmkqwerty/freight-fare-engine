@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/types"
@@ -18,8 +19,8 @@ func NewHTTPClient(endpoint string) *HTTPClient {
 	}
 }
 
-func (c *HTTPClient) AggregateInvoice(distance types.Distance) error {
-	b, err := json.Marshal(distance)
+func (c *HTTPClient) Aggregate(ctx context.Context, request *types.AggregateRequest) error {
+	b, err := json.Marshal(request)
 	if err != nil {
 		return err
 	}
