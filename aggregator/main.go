@@ -11,7 +11,6 @@ import (
 	"net"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 func main() {
@@ -35,7 +34,7 @@ func main() {
 }
 
 func makeGRPCTransport(listenAddr string, svc Aggregator) error {
-	fmt.Println("HTTP Transport running on", listenAddr)
+	fmt.Println("GRPC Transport running on", listenAddr)
 
 	ln, err := net.Listen("tcp", listenAddr)
 	if err != nil {
@@ -53,53 +52,12 @@ func makeGRPCTransport(listenAddr string, svc Aggregator) error {
 func makeHTTPTransport(listenAddr string, svc Aggregator) error {
 	fmt.Println("HTTP Transport running on", listenAddr)
 
-	http.HandleFunc("/aggregate", handleAggregate(svc))
-	http.HandleFunc("/invoice", handleGetInvoice(svc))
+	mhAggregate := newHTTPMetricHandler("aggregate")
+	mhInvoice := newHTTPMetricHandler("invoice")
+	http.HandleFunc("/aggregate", mhAggregate.instrument(handleAggregate(svc)))
+	http.HandleFunc("/invoice", mhInvoice.instrument(handleGetInvoice(svc)))
 	http.Handle("/metrics", promhttp.Handler())
 	return http.ListenAndServe(listenAddr, nil)
-}
-
-func handleGetInvoice(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-			return
-		}
-
-		obuID, err := strconv.Atoi(r.URL.Query().Get("obu"))
-		if err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid obu id"})
-			return
-		}
-
-		invoice, err := svc.CalculateInvoice(obuID)
-		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-
-		writeJSON(w, http.StatusOK, invoice)
-	}
-}
-
-func handleAggregate(svc Aggregator) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodPost {
-			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
-			return
-		}
-
-		var distance types.Distance
-		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
-			return
-		}
-
-		if err := svc.AggregateDistance(distance); err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
-			return
-		}
-	}
 }
 
 func makeStore() Storer {

@@ -20,7 +20,7 @@ func main() {
 		svc                CalculatorServicer
 		err                error
 	)
-	aggregatorEndpoint = fmt.Sprintf("http://localhost%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
+	aggregatorEndpoint = fmt.Sprintf("http://%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 

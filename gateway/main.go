@@ -20,7 +20,7 @@ func main() {
 	}
 
 	listenAddr := os.Getenv("GATEWAY_SERVER_ENDPOINT")
-	aggregatorServiceAddr := fmt.Sprintf("http://localhost%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
+	aggregatorServiceAddr := fmt.Sprintf("http://%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
 
 	var (
 		newClient  = client.NewHTTPClient(aggregatorServiceAddr)
