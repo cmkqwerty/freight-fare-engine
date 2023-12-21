@@ -2,30 +2,35 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
+	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/aggregator/client"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
 type apiFunc func(w http.ResponseWriter, r *http.Request) error
 
 func main() {
-	listenAddr := flag.String("listenAddr", ":6000", "listener address of HTTP gateway server")
-	aggregatorServiceAddr := flag.String("aggServiceAddr", "http://localhost:3000", "endpoint of aggregator service")
-	flag.Parse()
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
+	listenAddr := os.Getenv("GATEWAY_SERVER_ENDPOINT")
+	aggregatorServiceAddr := fmt.Sprintf("http://localhost%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
 
 	var (
-		newClient  = client.NewHTTPClient(*aggregatorServiceAddr)
+		newClient  = client.NewHTTPClient(aggregatorServiceAddr)
 		invHandler = NewInvoiceHandler(newClient)
 	)
 
 	http.HandleFunc("/invoice", makeAPIFunc(invHandler.handleGetInvoice))
 
-	logrus.Infof("HTTP gateway server started on %s", *listenAddr)
-	log.Fatal(http.ListenAndServe(*listenAddr, nil))
+	logrus.Infof("HTTP gateway server started on %s", listenAddr)
+	log.Fatal(http.ListenAndServe(listenAddr, nil))
 }
 
 type InvoiceHandler struct {

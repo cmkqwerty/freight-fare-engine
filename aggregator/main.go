@@ -2,33 +2,36 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"github.com/joho/godotenv"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 )
 
 func main() {
-	httpListenAddr := flag.String("httpAddr", ":3000", "HTTP server listen address")
-	grpcListenAddr := flag.String("grpcAddr", ":3001", "GRPC server listen address")
-	flag.Parse()
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
 
 	var (
-		store = NewMemoryStore()
-		svc   = NewInvoiceAggregator(store)
+		store          = makeStore()
+		svc            = NewInvoiceAggregator(store)
+		grpcListenAddr = os.Getenv("AGGREGATE_GRPC_ENDPOINT")
+		httpListenAddr = os.Getenv("AGGREGATE_HTTP_ENDPOINT")
 	)
 	svc = NewMetricsMiddleware(svc)
 	svc = NewLogMiddleware(svc)
 
 	go func() {
-		log.Fatal(makeGRPCTransport(*grpcListenAddr, svc))
+		log.Fatal(makeGRPCTransport(grpcListenAddr, svc))
 	}()
-	log.Fatal(makeHTTPTransport(*httpListenAddr, svc))
+	log.Fatal(makeHTTPTransport(httpListenAddr, svc))
 }
 
 func makeGRPCTransport(listenAddr string, svc Aggregator) error {
@@ -58,6 +61,11 @@ func makeHTTPTransport(listenAddr string, svc Aggregator) error {
 
 func handleGetInvoice(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
+
 		obuID, err := strconv.Atoi(r.URL.Query().Get("obu"))
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid obu id"})
@@ -76,8 +84,12 @@ func handleGetInvoice(svc Aggregator) http.HandlerFunc {
 
 func handleAggregate(svc Aggregator) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var distance types.Distance
+		if r.Method != http.MethodPost {
+			writeJSON(w, http.StatusMethodNotAllowed, map[string]string{"error": "method not allowed"})
+			return
+		}
 
+		var distance types.Distance
 		if err := json.NewDecoder(r.Body).Decode(&distance); err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": err.Error()})
 			return
@@ -87,6 +99,17 @@ func handleAggregate(svc Aggregator) http.HandlerFunc {
 			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 			return
 		}
+	}
+}
+
+func makeStore() Storer {
+	t := os.Getenv("AGGREGATE_STORE_TYPE")
+	switch t {
+	case "memory":
+		return NewMemoryStore()
+	default:
+		log.Fatal("invalid store type")
+		return nil
 	}
 }
 

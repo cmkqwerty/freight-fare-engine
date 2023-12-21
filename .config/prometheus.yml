@@ -11,4 +11,4 @@ scrape_configs:
     follow_redirects: true
     static_configs:
       - targets:
-          - localhost:3000
+          - localhost:4000
