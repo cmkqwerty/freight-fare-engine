@@ -36,5 +36,12 @@ func (c *GRPCClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, er
 		ObuID: int32(id),
 	}
 
-	return c.client.GetInvoice(ctx, &invRequest)
+	invoiceResponse, err := c.client.GetInvoice(ctx, &invRequest)
+	invoice := types.Invoice{
+		OBUID:         int(invoiceResponse.ObuID),
+		TotalDistance: invoiceResponse.TotalDistance,
+		TotalAmount:   invoiceResponse.TotalAmount,
+	}
+
+	return &invoice, err
 }

@@ -28,7 +28,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type AggregatorClient interface {
 	Aggregate(ctx context.Context, in *AggregateRequest, opts ...grpc.CallOption) (*None, error)
-	GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*Invoice, error)
+	GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*GetInvoiceResponse, error)
 }
 
 type aggregatorClient struct {
@@ -48,8 +48,8 @@ func (c *aggregatorClient) Aggregate(ctx context.Context, in *AggregateRequest, 
 	return out, nil
 }
 
-func (c *aggregatorClient) GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*Invoice, error) {
-	out := new(Invoice)
+func (c *aggregatorClient) GetInvoice(ctx context.Context, in *GetInvoiceRequest, opts ...grpc.CallOption) (*GetInvoiceResponse, error) {
+	out := new(GetInvoiceResponse)
 	err := c.cc.Invoke(ctx, Aggregator_GetInvoice_FullMethodName, in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (c *aggregatorClient) GetInvoice(ctx context.Context, in *GetInvoiceRequest
 // for forward compatibility
 type AggregatorServer interface {
 	Aggregate(context.Context, *AggregateRequest) (*None, error)
-	GetInvoice(context.Context, *GetInvoiceRequest) (*Invoice, error)
+	GetInvoice(context.Context, *GetInvoiceRequest) (*GetInvoiceResponse, error)
 	mustEmbedUnimplementedAggregatorServer()
 }
 
@@ -73,7 +73,7 @@ type UnimplementedAggregatorServer struct {
 func (UnimplementedAggregatorServer) Aggregate(context.Context, *AggregateRequest) (*None, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Aggregate not implemented")
 }
-func (UnimplementedAggregatorServer) GetInvoice(context.Context, *GetInvoiceRequest) (*Invoice, error) {
+func (UnimplementedAggregatorServer) GetInvoice(context.Context, *GetInvoiceRequest) (*GetInvoiceResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetInvoice not implemented")
 }
 func (UnimplementedAggregatorServer) mustEmbedUnimplementedAggregatorServer() {}
