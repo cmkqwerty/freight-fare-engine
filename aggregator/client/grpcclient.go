@@ -30,3 +30,11 @@ func (c *GRPCClient) Aggregate(ctx context.Context, request *types.AggregateRequ
 	_, err := c.client.Aggregate(ctx, request)
 	return err
 }
+
+func (c *GRPCClient) GetInvoice(ctx context.Context, id int) (*types.Invoice, error) {
+	invRequest := types.GetInvoiceRequest{
+		ObuID: int32(id),
+	}
+
+	return c.client.GetInvoice(ctx, &invRequest)
+}
