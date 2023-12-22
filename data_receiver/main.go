@@ -5,6 +5,8 @@ import (
 	"github.com/cmkqwerty/freight-fare-engine/types"
 	"github.com/gorilla/websocket"
 	"log"
+	"math"
+	"math/rand"
 	"net/http"
 )
 
@@ -69,6 +71,8 @@ func (dr *DataReceiver) wsReceiveLoop() {
 			log.Printf("read error: %v\n", err)
 			continue
 		}
+
+		data.RequestID = rand.Intn(math.MaxInt)
 
 		if err := dr.produceData(data); err != nil {
 			log.Printf("produce error: %v\n", err)

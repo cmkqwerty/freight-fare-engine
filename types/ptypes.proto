@@ -4,6 +4,7 @@ option go_package = "github.com/cmkqwerty/freight-fare-engine/types";
 
 service Aggregator {
   rpc Aggregate(AggregateRequest) returns (None);
+  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceResponse);
 }
 
 message AggregateRequest {
@@ -14,6 +15,12 @@ message AggregateRequest {
 
 message GetInvoiceRequest {
   int32 ObuID = 1;
+}
+
+message GetInvoiceResponse {
+  int32 ObuID = 1;
+  double TotalDistance = 2;
+  double TotalAmount = 3;
 }
 
 message None {}

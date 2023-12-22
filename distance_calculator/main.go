@@ -1,20 +1,26 @@
 package main
 
 import (
+	"fmt"
 	"github.com/cmkqwerty/freight-fare-engine/aggregator/client"
+	"github.com/joho/godotenv"
 	"log"
+	"os"
 )
 
-const (
-	kafkaTopic         = "obu-data"
-	aggregatorEndpoint = "http://localhost:3000"
-)
+const kafkaTopic = "obu-data"
 
 func main() {
+	if err := godotenv.Load(); err != nil {
+		log.Fatal(err)
+	}
+
 	var (
-		svc CalculatorServicer
-		err error
+		aggregatorEndpoint string
+		svc                CalculatorServicer
+		err                error
 	)
+	aggregatorEndpoint = fmt.Sprintf("http://%s", os.Getenv("AGGREGATE_HTTP_ENDPOINT"))
 	svc = NewCalculatorService()
 	svc = NewLogMiddleware(svc)
 
