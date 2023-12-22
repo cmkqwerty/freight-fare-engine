@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -44,7 +45,16 @@ func NewInvoiceHandler(client client.Client) *InvoiceHandler {
 }
 
 func (h *InvoiceHandler) handleGetInvoice(w http.ResponseWriter, r *http.Request) error {
-	invoice, err := h.client.GetInvoice(r.Context(), 192928971)
+	id := r.URL.Query().Get("id")
+	if id == "" {
+		return fmt.Errorf("id is required")
+	}
+	obuID, err := strconv.Atoi(id)
+	if err != nil {
+		return fmt.Errorf("id must be a number")
+	}
+
+	invoice, err := h.client.GetInvoice(r.Context(), obuID)
 	if err != nil {
 		return err
 	}
