@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package pb;
+
+option go_package = "github.com/cmkqwerty/freight-fare-engine/gokitimp/aggsvc/pb";
+
+
+service Aggregator {
+  rpc Aggregate(AggregateRequest) returns (AggregateReply) {}
+  rpc GetInvoice(GetInvoiceRequest) returns (GetInvoiceReply) {}
+}
+
+message AggregateRequest {
+  int32 ObuID = 1;
+  double Value = 2;
+  int64 Unix = 3;
+}
+
+message AggregateReply {}
+
+message GetInvoiceRequest {
+  int32 ObuID = 1;
+}
+
+message GetInvoiceReply {
+  int32 ObuID = 1;
+  double TotalDistance = 2;
+  double TotalAmount = 3;
+}
