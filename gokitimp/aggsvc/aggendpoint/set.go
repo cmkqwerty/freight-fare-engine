@@ -2,14 +2,47 @@ package aggendpoint
 
 import (
 	"context"
-	"github.com/cmkqwerty/freight-fare-engine/gokit_aggregator/aggsvc/aggservice"
+	"github.com/cmkqwerty/freight-fare-engine/gokitimp/aggsvc/aggservice"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"github.com/go-kit/kit/circuitbreaker"
 	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/ratelimit"
+	"github.com/sony/gobreaker"
+	"golang.org/x/time/rate"
+	"time"
 )
 
 type Set struct {
 	AggregateEndpoint endpoint.Endpoint
 	CalculateEndpoint endpoint.Endpoint
+}
+
+func New(svc aggservice.Service, logger log.Logger) Set {
+	var aggregateEndpoint endpoint.Endpoint
+	{
+		aggregateEndpoint = MakeAggregateEndpoint(svc)
+
+		aggregateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(aggregateEndpoint)
+		aggregateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(aggregateEndpoint)
+		// aggregateEndpoint = LoggingMiddleware(log.With(logger, "method", "Aggregate"))(aggregateEndpoint)
+		// aggregateEndpoint = InstrumentingMiddleware(duration.With("method", "Aggregate"))(aggregateEndpoint)
+	}
+
+	var calculateEndpoint endpoint.Endpoint
+	{
+		calculateEndpoint = MakeCalculateEndpoint(svc)
+
+		calculateEndpoint = ratelimit.NewErroringLimiter(rate.NewLimiter(rate.Every(time.Second), 1))(calculateEndpoint)
+		calculateEndpoint = circuitbreaker.Gobreaker(gobreaker.NewCircuitBreaker(gobreaker.Settings{}))(calculateEndpoint)
+		// calculateEndpoint = LoggingMiddleware(log.With(logger, "method", "Invoice"))(calculateEndpoint)
+		// calculateEndpoint = InstrumentingMiddleware(duration.With("method", "Invoice"))(calculateEndpoint)
+	}
+
+	return Set{
+		AggregateEndpoint: aggregateEndpoint,
+		CalculateEndpoint: calculateEndpoint,
+	}
 }
 
 type AggregateRequest struct {

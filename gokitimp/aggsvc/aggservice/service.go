@@ -45,8 +45,8 @@ func (svc *BasicService) Calculate(ctx context.Context, id int) (*types.Invoice,
 	return invoice, nil
 }
 
-// NewAggregatorService returns a naive, stateless implementation of Service.
-func NewAggregatorService() Service {
+// New returns a naive, stateless implementation of Service.
+func New() Service {
 	var svc Service
 	svc = newBasicService(NewMemoryStore())
 	svc = newLoggingMiddleware()(svc)
