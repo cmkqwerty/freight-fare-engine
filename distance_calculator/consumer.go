@@ -42,6 +42,12 @@ func (c *KafkaConsumer) Start() {
 	c.readMessageLoop()
 }
 
+func (c *KafkaConsumer) Stop() {
+	logrus.Info("Stopping Kafka transport")
+	c.isRunning = false
+	c.consumer.Close()
+}
+
 func (c *KafkaConsumer) readMessageLoop() {
 	for c.isRunning {
 		msg, err := c.consumer.ReadMessage(-1)
@@ -53,6 +59,10 @@ func (c *KafkaConsumer) readMessageLoop() {
 		var data types.OBUData
 		if err := json.Unmarshal(msg.Value, &data); err != nil {
 			logrus.Errorf("Error JSON marshalling OBUData: %v", err)
+			logrus.WithFields(logrus.Fields{
+				"err":       err,
+				"requestID": data.RequestID,
+			})
 			continue
 		}
 
