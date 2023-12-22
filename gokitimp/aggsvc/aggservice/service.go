@@ -3,6 +3,7 @@ package aggservice
 import (
 	"context"
 	"github.com/cmkqwerty/freight-fare-engine/types"
+	"github.com/go-kit/log"
 )
 
 const basePrice = 3.15
@@ -46,11 +47,13 @@ func (svc *BasicService) Calculate(ctx context.Context, id int) (*types.Invoice,
 }
 
 // New returns a naive, stateless implementation of Service.
-func New() Service {
+func New(logger log.Logger) Service {
 	var svc Service
-	svc = newBasicService(NewMemoryStore())
-	svc = newLoggingMiddleware()(svc)
-	svc = newInstrumentationMiddleware()(svc)
+	{
+		svc = newBasicService(NewMemoryStore())
+		svc = newLoggingMiddleware(logger)(svc)
+		svc = newInstrumentationMiddleware()(svc)
+	}
 
 	return svc
 }
